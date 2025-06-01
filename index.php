@@ -1,243 +1,123 @@
 <?php
 
-namespace RefactoringGuru\AbstractFactory\RealWorld;
+// ===============================
+// Interfaces dos Produtos
+// ===============================
 
 /**
- * A interface da Fábrica Abstrata declara métodos de criação para cada tipo
- * distinto de produto.
+ * Interface para o produto Cadeira.
+ * Define o que toda cadeira deve saber fazer.
  */
-interface TemplateFactory
-{
-    public function createTitleTemplate(): TitleTemplate;
-
-    public function createPageTemplate(): PageTemplate;
-
-    public function getRenderer(): TemplateRenderer;
+interface Cadeira {
+    public function sentar();
 }
 
 /**
- * Cada Fábrica Concreta corresponde a uma variante específica (ou família) de
- * produtos.
- *
- * Esta Fábrica Concreta cria templates do tipo Twig.
+ * Interface para o produto Mesa.
+ * Define o que toda mesa deve saber fazer.
  */
-class TwigTemplateFactory implements TemplateFactory
-{
-    public function createTitleTemplate(): TitleTemplate
-    {
-        return new TwigTitleTemplate();
-    }
+interface Mesa {
+    public function colocarObjeto();
+}
 
-    public function createPageTemplate(): PageTemplate
-    {
-        return new TwigPageTemplate($this->createTitleTemplate());
-    }
+// ===============================
+// Produtos Concretos - Estilo Moderno
+// ===============================
 
-    public function getRenderer(): TemplateRenderer
-    {
-        return new TwigRenderer();
+class CadeiraModerna implements Cadeira {
+    public function sentar() {
+        echo "🪑 Sentando em uma cadeira moderna.\n";
     }
 }
 
-/**
- * E esta Fábrica Concreta cria templates do tipo PHPTemplate.
- */
-class PHPTemplateFactory implements TemplateFactory
-{
-    public function createTitleTemplate(): TitleTemplate
-    {
-        return new PHPTemplateTitleTemplate();
-    }
-
-    public function createPageTemplate(): PageTemplate
-    {
-        return new PHPTemplatePageTemplate($this->createTitleTemplate());
-    }
-
-    public function getRenderer(): TemplateRenderer
-    {
-        return new PHPTemplateRenderer();
+class MesaModerna implements Mesa {
+    public function colocarObjeto() {
+        echo "🟫 Colocando objeto sobre uma mesa moderna.\n";
     }
 }
 
-/**
- * Cada tipo distinto de produto deve ter uma interface separada.
- * Todas as variantes do produto devem seguir a mesma interface.
- *
- * Por exemplo, esta interface de Produto Abstrato descreve o comportamento dos
- * templates de título de página.
- */
-interface TitleTemplate
-{
-    public function getTemplateString(): string;
-}
+// ===============================
+// Produtos Concretos - Estilo Vitoriano
+// ===============================
 
-/**
- * Este Produto Concreto fornece templates de título de página no formato Twig.
- */
-class TwigTitleTemplate implements TitleTemplate
-{
-    public function getTemplateString(): string
-    {
-        return "<h1>{{ title }}</h1>";
+class CadeiraVitoriana implements Cadeira {
+    public function sentar() {
+        echo "🪑 Sentando em uma cadeira vitoriana elegante.\n";
     }
 }
 
+class MesaVitoriana implements Mesa {
+    public function colocarObjeto() {
+        echo "🟫 Colocando objeto sobre uma mesa vitoriana decorada.\n";
+    }
+}
+
+// ===============================
+// Fábrica Abstrata
+// ===============================
+
 /**
- * E este Produto Concreto fornece templates de título de página no formato PHPTemplate.
+ * Interface para a fábrica de móveis.
+ * Define métodos para criar todos os tipos de móveis (produtos).
  */
-class PHPTemplateTitleTemplate implements TitleTemplate
-{
-    public function getTemplateString(): string
-    {
-        return "<h1><?= \$title; ?></h1>";
+interface FabricaDeMobilia {
+    public function criarCadeira(): Cadeira;
+    public function criarMesa(): Mesa;
+}
+
+// ===============================
+// Fábricas Concretas
+// ===============================
+
+/**
+ * Fábrica que cria móveis no estilo moderno.
+ */
+class FabricaModerna implements FabricaDeMobilia {
+    public function criarCadeira(): Cadeira {
+        return new CadeiraModerna();
+    }
+
+    public function criarMesa(): Mesa {
+        return new MesaModerna();
     }
 }
 
 /**
- * Este é outro tipo de Produto Abstrato, que descreve templates de páginas completas.
+ * Fábrica que cria móveis no estilo vitoriano.
  */
-interface PageTemplate
-{
-    public function getTemplateString(): string;
-}
+class FabricaVitoriana implements FabricaDeMobilia {
+    public function criarCadeira(): Cadeira {
+        return new CadeiraVitoriana();
+    }
 
-/**
- * O template de página usa o sub-template de título, então precisamos fornecer
- * uma forma de definir isso no objeto de sub-template.
- * A fábrica abstrata vai vincular o template de página com um template de título da mesma variante.
- */
-abstract class BasePageTemplate implements PageTemplate
-{
-    protected $titleTemplate;
-
-    public function __construct(TitleTemplate $titleTemplate)
-    {
-        $this->titleTemplate = $titleTemplate;
+    public function criarMesa(): Mesa {
+        return new MesaVitoriana();
     }
 }
 
-/**
- * Variante Twig dos templates de página completa.
- */
-class TwigPageTemplate extends BasePageTemplate
-{
-    public function getTemplateString(): string
-    {
-        $renderedTitle = $this->titleTemplate->getTemplateString();
+// ===============================
+// Código Cliente
+// ===============================
 
-        return <<<HTML
-        <div class="page">
-            $renderedTitle
-            <article class="content">{{ content }}</article>
-        </div>
-        HTML;
-    }
+/**
+ * O cliente usa a fábrica abstrata, sem saber a implementação concreta.
+ */
+function montarSala(FabricaDeMobilia $fabrica) {
+    echo "🛋️ Montando uma sala com a fábrica escolhida:\n";
+
+    $cadeira = $fabrica->criarCadeira();
+    $mesa = $fabrica->criarMesa();
+
+    $cadeira->sentar();
+    $mesa->colocarObjeto();
 }
 
-/**
- * Variante PHPTemplate dos templates de página completa.
- */
-class PHPTemplatePageTemplate extends BasePageTemplate
-{
-    public function getTemplateString(): string
-    {
-        $renderedTitle = $this->titleTemplate->getTemplateString();
+// ===============================
+// Testando
+// ===============================
 
-        return <<<HTML
-        <div class="page">
-            $renderedTitle
-            <article class="content"><?= \$content; ?></article>
-        </div>
-        HTML;
-    }
-}
+echo "=== Estilo Moderno ===\n";
+montarSala(new FabricaModerna());
 
-/**
- * O renderizador é responsável por converter uma string de template em código HTML real.
- * Cada renderizador se comporta de forma diferente e espera seu próprio tipo de
- * string de template. Utilizar fábricas ajuda a garantir que o renderizador receba
- * o tipo certo de template.
- */
-interface TemplateRenderer
-{
-    public function render(string $templateString, array $arguments = []): string;
-}
-
-/**
- * O renderizador para templates Twig.
- */
-class TwigRenderer implements TemplateRenderer
-{
-    public function render(string $templateString, array $arguments = []): string
-    {
-        return \Twig::render($templateString, $arguments);
-    }
-}
-
-/**
- * O renderizador para templates PHPTemplate.
- * Note que esta implementação é bem básica, para não dizer precária.
- * O uso da função `eval` tem muitas implicações de segurança, então use com cuidado em projetos reais.
- */
-class PHPTemplateRenderer implements TemplateRenderer
-{
-    public function render(string $templateString, array $arguments = []): string
-    {
-        extract($arguments);
-
-        ob_start();
-        eval(' ?>' . $templateString . '<?php ');
-        $result = ob_get_contents();
-        ob_end_clean();
-
-        return $result;
-    }
-}
-
-/**
- * Código cliente. Note que ele aceita a Fábrica Abstrata como parâmetro,
- * o que permite que o cliente trabalhe com qualquer tipo de fábrica concreta.
- */
-class Page
-{
-
-    public $title;
-
-    public $content;
-
-    public function __construct($title, $content)
-    {
-        $this->title = $title;
-        $this->content = $content;
-    }
-
-    // Veja como o template poderia ser usado na prática. Note que a
-    // classe Page não depende de nenhuma classe concreta de template.
-    public function render(TemplateFactory $factory): string
-    {
-        $pageTemplate = $factory->createPageTemplate();
-
-        $renderer = $factory->getRenderer();
-
-        return $renderer->render($pageTemplate->getTemplateString(), [
-            'title' => $this->title,
-            'content' => $this->content
-        ]);
-    }
-}
-
-/**
- * Agora, em outras partes do app, o código cliente pode aceitar qualquer tipo
- * de objeto fábrica.
- */
-$page = new Page('Página de exemplo', 'Este é o corpo do conteúdo.');
-
-echo "Testando renderização real com a fábrica PHPTemplate:\n";
-echo $page->render(new PHPTemplateFactory());
-
-
-// Descomente o trecho abaixo se tiver o Twig instalado:
-
-// echo "Testando renderização com a fábrica Twig:\n";
-// echo $page->render(new TwigTemplateFactory());
+echo "\n=== Estilo Vitoriano ===\n";
+montarSala(new FabricaVitoriana());
